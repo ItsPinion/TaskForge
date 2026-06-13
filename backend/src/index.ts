@@ -51,9 +51,8 @@ export const userRoute = app
       console.log(users);
       return c.json(users);
     } catch (error) {
-      console.log("ERROR:", error);
       return c.json(
-        { success: false, message: "Failed to access the database", error },
+        { success: false, message: "Failed to access the database" },
         500,
       );
     }
@@ -113,12 +112,11 @@ export const userRoute = app
           token,
         });
       } catch (error) {
-        console.log("Failed to register user:", error);
+        console.log("Failed to register user:");
         return c.json(
           {
             success: false,
             message: "Failed to register user",
-            error,
           },
           500,
         );
@@ -184,7 +182,6 @@ export const userRoute = app
           {
             success: false,
             message: "Failed to access the database",
-            error,
           },
           500,
         );
@@ -237,7 +234,7 @@ export const taskRoute = app
           console.log(tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json({ message: "Unauthorized", error }, 401);
+          return c.json({ message: "Unauthorized" }, 401);
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
@@ -270,10 +267,7 @@ export const taskRoute = app
           console.log("tasks:", tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json(
-            { message: "Failed to access the database", error },
-            500,
-          );
+          return c.json({ message: "Failed to access the database" }, 500);
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
@@ -333,7 +327,6 @@ export const taskRoute = app
             {
               success: false,
               message: "Failed to create task",
-              error,
             },
             500,
           );
