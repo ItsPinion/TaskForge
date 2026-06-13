@@ -1,4 +1,3 @@
-import { userRoute } from ".";
 import { taskTable, usersTable } from "./schema";
 
 export type User = typeof usersTable.$inferSelect;

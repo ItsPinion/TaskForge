@@ -2,7 +2,7 @@
 import { hc } from "hono/client";
 import type { userAppType } from "@/../../rpc/appTypes";
 
-const client = hc<userAppType>("http://localhost:8000");
+const client = hc<userAppType>(process.env.BACKEND || "http://localhost:8000");
 
 export interface RegisterPayload {
   name: string;

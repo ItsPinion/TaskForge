@@ -5,25 +5,12 @@ import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { compress } from "hono/compress";
-import {
-  createUser,
-  getUserByEmail,
-  getUserById,
-  getUsers,
-  userExists,
-} from "./user";
+import { createUser, getUserByEmail, getUsers, userExists } from "./user";
 import z from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { comparePassword, hashPassword } from "./utils/password";
 import { generateToken, verifyToken } from "./utils/auth";
-import { bearerAuth } from "hono/bearer-auth";
-import {
-  createTask,
-  getAllTasksWithUsers,
-  geTasksByIdWithUser,
-  getTaskById,
-  getTasksByUserId,
-} from "./task";
+import { createTask, getAllTasksWithUsers, geTasksByIdWithUser } from "./task";
 
 const app = new Hono()
   .use("*", compress())
@@ -250,7 +237,7 @@ export const taskRoute = app
           console.log(tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json({ message: "Unauthorized" }, 401);
+          return c.json({ message: "Unauthorized", error }, 401);
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
@@ -283,7 +270,10 @@ export const taskRoute = app
           console.log("tasks:", tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json({ message: "Failed to access the database" }, 500);
+          return c.json(
+            { message: "Failed to access the database", error },
+            500,
+          );
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
@@ -351,9 +341,6 @@ export const taskRoute = app
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
       }
-
-      try {
-      } catch (error) {}
     },
   );
 export default {

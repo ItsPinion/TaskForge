@@ -1,7 +1,7 @@
 import { hc } from "hono/client";
 import { taskAppType } from "../../../../../rpc/appTypes";
 
-const client = hc<taskAppType>("http://localhost:8000");
+const client = hc<taskAppType>(process.env.BACKEND || "http://localhost:8000");
 
 export async function getTasksById(token: string | null) {
   const res = await client.tasks.$get(
