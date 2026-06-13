@@ -20,6 +20,28 @@ const app = new Hono()
   .use("*", prettyJSON())
   .use("*", secureHeaders());
 
+app.onError((err, c) => {
+  if (err instanceof z.ZodError) {
+    return c.json(
+      {
+        success: false,
+        message: err.issues[0]?.message ?? "Validation failed",
+        errors: err.issues,
+      },
+      400,
+    );
+  }
+
+  console.error(err);
+
+  return c.json(
+    {
+      success: false,
+      message: "Internal Server Error",
+    },
+    500,
+  );
+});
 export const userRoute = app
   .get("/users", async (c) => {
     const authHeader = c.req.header("Authorization");
@@ -57,36 +79,20 @@ export const userRoute = app
       );
     }
   })
-
   .post(
     "/register",
     zValidator(
       "json",
       z.object({
-        name: z.string(),
-        email: z.string().email(),
-        password: z.string(),
+        name: z.string().min(1, "Name is required"),
+        email: z.email(),
+        password: z.string().min(6, "Password must be at least 6 characters"),
       }),
-      (result, c) => {
-        if (!result.success) {
-          return c.json(
-            {
-              success: false,
-              message: result.error.issues[0]?.message ?? "Validation failed",
-              errors: result.error.issues,
-            },
-            400,
-          );
-        }
-      },
     ),
     async (c) => {
       const user = c.req.valid("json");
 
-      console.log(user);
       if (await userExists(user.email)) {
-        console.log("User with this email already exists:", user.email);
-
         return c.json(
           {
             success: false,
@@ -105,14 +111,13 @@ export const userRoute = app
         });
 
         const token = generateToken(ID, user.name, user.email, "user");
-        console.log("Generated token:", token);
+
         return c.json({
           success: true,
           message: "User registered successfully",
           token,
         });
-      } catch (error) {
-        console.log("Failed to register user:");
+      } catch {
         return c.json(
           {
             success: false,
@@ -128,21 +133,9 @@ export const userRoute = app
     zValidator(
       "json",
       z.object({
-        email: z.string().email(),
+        email: z.email(),
         password: z.string(),
       }),
-      (result, c) => {
-        if (!result.success) {
-          return c.json(
-            {
-              success: false,
-              message: result.error.issues[0]?.message ?? "Validation failed",
-              errors: result.error.issues,
-            },
-            400,
-          );
-        }
-      },
     ),
     async (c) => {
       const req = c.req.valid("json");
@@ -161,6 +154,7 @@ export const userRoute = app
         }
 
         const user = await getUserByEmail(req.email);
+
         if (!(await comparePassword(req.password, user.password))) {
           return c.json(
             {
@@ -172,12 +166,13 @@ export const userRoute = app
         }
 
         const token = generateToken(user.id, user.name, user.email, user.role);
+
         return c.json({
           success: true,
           message: "Login successful",
           token,
         });
-      } catch (error) {
+      } catch {
         return c.json(
           {
             success: false,
@@ -279,60 +274,48 @@ export const taskRoute = app
     zValidator(
       "json",
       z.object({
-        title: z.string(),
-        userId: z.int(),
+        title: z.string().min(1),
+        userId: z.number().int(),
         dueDate: z.string(),
       }),
-      (result, c) => {
-        if (!result.success) {
-          return c.json(
-            {
-              success: false,
-              message: result.error.issues[0]?.message ?? "Validation failed",
-              errors: result.error.issues,
-            },
-            400,
-          );
-        }
-      },
     ),
     async (c) => {
       const req = c.req.valid("json");
 
       const authHeader = c.req.header("Authorization");
+
       if (!authHeader) {
         return c.json({ message: "Unauthorized" }, 401);
       }
 
       const token = authHeader.split(" ")[1];
+
       if (!token) {
         return c.json({ message: "Unauthorized" }, 401);
       }
 
       try {
         const user = verifyToken(token);
+
         if (user.role !== "admin") {
           return c.json({ message: "Unauthorized" }, 401);
         }
-        try {
-          const task = await createTask({
-            title: req.title,
-            dueDate: req.dueDate,
-            userId: req.userId,
-          });
-          console.log("Task created:", task);
-          return c.json(task);
-        } catch (error) {
-          return c.json(
-            {
-              success: false,
-              message: "Failed to create task",
-            },
-            500,
-          );
-        }
+
+        const task = await createTask({
+          title: req.title,
+          dueDate: req.dueDate,
+          userId: req.userId,
+        });
+
+        return c.json(task);
       } catch {
-        return c.json({ message: "Unauthorized" }, 401);
+        return c.json(
+          {
+            success: false,
+            message: "Failed to create task",
+          },
+          500,
+        );
       }
     },
   );
