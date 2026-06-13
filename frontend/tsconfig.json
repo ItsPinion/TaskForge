@@ -25,11 +25,11 @@
   },
   "include": [
     "next-env.d.ts",
-    ".src/**/*.ts",
-    ".src/**/*.tsx",
+    "frontend/src/**/*.ts",
+    "frontend/src/**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    ".src/**/*.mts"
+    "frontend/src/**/*.mts"
   ],
   "exclude": ["node_modules"]
 }
