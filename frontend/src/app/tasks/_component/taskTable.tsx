@@ -5,14 +5,11 @@ import { getTasksById } from "@/app/lib/api/task";
 import { useQuery } from "@tanstack/react-query";
 
 export default function TaskTable() {
-  const { data: tasks, isLoading } = useQuery({
+  const { data: tasks } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => await getTasksById(getSession()),
   });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.1)]">
       {/* Header */}

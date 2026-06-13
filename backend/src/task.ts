@@ -4,7 +4,7 @@ import { taskTable, usersTable } from "./schema";
 import { Task } from "./types";
 
 export async function createTask(
-  task: Omit<Task, "id" | "createdAt" | "updatedAt">,
+  task: Omit<Task, "id" | "createdAt" | "updatedAt" | "status">,
 ) {
   console.log("Creating task:", task);
   await db.insert(taskTable).values(task);
@@ -12,7 +12,7 @@ export async function createTask(
     .select()
     .from(taskTable)
     .where(eq(taskTable.title, task.title));
-  return createdTask.id;
+  return createdTask;
 }
 
 export async function getTasks() {
@@ -54,7 +54,7 @@ export async function getTasksByDueDate(dueDate: string) {
   return tasks;
 }
 
-export async function getTasksByuserId(userId: number) {
+export async function getTasksByUserId(userId: number) {
   const tasks = await db
     .select()
     .from(taskTable)
@@ -70,13 +70,12 @@ export async function geTasksByIdWithUser(id: number) {
       status: taskTable.status,
       dueDate: taskTable.dueDate,
       assignedTo: usersTable.name,
+      userId: usersTable.id,
     })
     .from(taskTable)
     .leftJoin(usersTable, eq(taskTable.userId, usersTable.id))
     .where(eq(taskTable.userId, id));
 }
-
-
 
 export async function getAllTasksWithUsers() {
   return await db
@@ -86,6 +85,7 @@ export async function getAllTasksWithUsers() {
       status: taskTable.status,
       dueDate: taskTable.dueDate,
       assignedTo: usersTable.name,
+      userId: usersTable.id,
     })
     .from(taskTable)
     .leftJoin(usersTable, eq(taskTable.userId, usersTable.id));

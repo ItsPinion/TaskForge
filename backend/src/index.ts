@@ -5,17 +5,24 @@ import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { compress } from "hono/compress";
-import { createUser, getUserByEmail, getUsers, userExists } from "./user";
+import {
+  createUser,
+  getUserByEmail,
+  getUserById,
+  getUsers,
+  userExists,
+} from "./user";
 import z from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { comparePassword, hashPassword } from "./utils/password";
 import { generateToken, verifyToken } from "./utils/auth";
 import { bearerAuth } from "hono/bearer-auth";
 import {
+  createTask,
   getAllTasksWithUsers,
   geTasksByIdWithUser,
   getTaskById,
-  getTasksByuserId,
+  getTasksByUserId,
 } from "./task";
 
 const app = new Hono()
@@ -276,14 +283,79 @@ export const taskRoute = app
           console.log("tasks:", tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json({ message: "Unauthorized" }, 401);
+          return c.json({ message: "Failed to access the database" }, 500);
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
       }
     },
-  );
+  )
+  .post(
+    "/task",
+    zValidator(
+      "json",
+      z.object({
+        title: z.string(),
+        userId: z.int(),
+        dueDate: z.string(),
+      }),
+      (result, c) => {
+        if (!result.success) {
+          return c.json(
+            {
+              success: false,
+              message: result.error.issues[0]?.message ?? "Validation failed",
+              errors: result.error.issues,
+            },
+            400,
+          );
+        }
+      },
+    ),
+    async (c) => {
+      const req = c.req.valid("json");
 
+      const authHeader = c.req.header("Authorization");
+      if (!authHeader) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
+
+      const token = authHeader.split(" ")[1];
+      if (!token) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
+
+      try {
+        const user = verifyToken(token);
+        if (user.role !== "admin") {
+          return c.json({ message: "Unauthorized" }, 401);
+        }
+        try {
+          const task = await createTask({
+            title: req.title,
+            dueDate: req.dueDate,
+            userId: req.userId,
+          });
+          console.log("Task created:", task);
+          return c.json(task);
+        } catch (error) {
+          return c.json(
+            {
+              success: false,
+              message: "Failed to create task",
+              error,
+            },
+            500,
+          );
+        }
+      } catch {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
+
+      try {
+      } catch (error) {}
+    },
+  );
 export default {
   port: 8000,
   fetch: app.fetch,
