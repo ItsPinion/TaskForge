@@ -5,7 +5,13 @@ import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { compress } from "hono/compress";
-import { createUser, getUserByEmail, getUsers, userExists } from "./user";
+import {
+  createUser,
+  getUserByEmail,
+  getUsers,
+  promoteUserToAdmin,
+  userExists,
+} from "./user";
 import z from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { comparePassword, hashPassword } from "./utils/password";
@@ -20,28 +26,6 @@ const app = new Hono()
   .use("*", prettyJSON())
   .use("*", secureHeaders());
 
-app.onError((err, c) => {
-  if (err instanceof z.ZodError) {
-    return c.json(
-      {
-        success: false,
-        message: err.issues[0]?.message ?? "Validation failed",
-        errors: err.issues,
-      },
-      400,
-    );
-  }
-
-  console.error(err);
-
-  return c.json(
-    {
-      success: false,
-      message: "Internal Server Error",
-    },
-    500,
-  );
-});
 export const userRoute = app
   .get("/users", async (c) => {
     const authHeader = c.req.header("Authorization");
@@ -203,7 +187,58 @@ export const userRoute = app
     } catch {
       return c.json({ message: "Unauthorized" }, 401);
     }
-  });
+  })
+  .post(
+    "/promote",
+    zValidator(
+      "json",
+      z.object({
+        userId: z.number().int(),
+      }),
+    ),
+    async (c) => {
+      const req = c.req.valid("json");
+      if (req.userId === 4) {
+        return c.json({ message: "Cannot promote this user to admin" }, 400);
+      }
+
+      const authHeader = c.req.header("Authorization");
+
+      if (!authHeader) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
+
+      const token = authHeader.split(" ")[1];
+
+      if (!token) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
+
+      try {
+        const user = verifyToken(token);
+
+        if (user.role !== "admin") {
+          return c.json({ message: "Unauthorized" }, 401);
+        }
+
+        try {
+          const user = await promoteUserToAdmin(req.userId);
+
+          return c.json(user);
+        } catch (error) {
+          return c.json(
+            {
+              success: false,
+              message: "Failed to promote user",
+            },
+            500,
+          );
+        }
+      } catch {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
+    },
+  );
 
 export const taskRoute = app
   .get(
@@ -240,6 +275,7 @@ export const taskRoute = app
     "/admin/tasks",
 
     async (c) => {
+      console.log("GETTING TASKS");
       const authHeader = c.req.header("Authorization");
 
       if (!authHeader) {

@@ -31,7 +31,11 @@ export async function registerUser(data: RegisterPayload) {
   }
 
   const result = await res.json();
-  throw new Error(result.message);
+  const errorMessage =
+    typeof result === "object" && result !== null && "message" in result
+      ? result.message
+      : "Registration failed";
+  throw new Error(errorMessage);
 }
 
 export async function loginUser(data: LoginPayload) {
@@ -50,7 +54,11 @@ export async function loginUser(data: LoginPayload) {
   }
 
   const result = await res.json();
-  throw new Error(result.message);
+  const errorMessage =
+    typeof result === "object" && result !== null && "message" in result
+      ? result.message
+      : "Registration failed";
+  throw new Error(errorMessage);
 }
 
 export async function getMe(token: string | null) {
@@ -96,4 +104,29 @@ export async function getAllUsers(token: string | null) {
     return result;
   }
   return null;
+}
+
+export async function promoteUserToAdmin(userId: number, token: string | null) {
+  if (userId === 4) {
+    throw new Error("Cannot promote this user to admin");
+  }
+  const res = await client.promote.$post(
+    {
+      json: {
+        userId: userId,
+      },
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (res.ok) {
+    console.log("RESPONSE:", res);
+    const result = await res.json();
+    console.log("RESULT:", result);
+    return result;
+  }
 }

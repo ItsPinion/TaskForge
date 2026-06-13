@@ -1,11 +1,12 @@
 "use client";
-
 export function createSession(token: string) {
-  localStorage.setItem("token", token);
+  sessionStorage.setItem("token", token);
 }
+
 export function getSession() {
-  return localStorage.getItem("token");
+  return sessionStorage.getItem("token");
 }
+
 export function destroySession() {
-  localStorage.removeItem("token");
+  sessionStorage.removeItem("token");
 }

@@ -55,3 +55,18 @@ export async function userExists(email: string) {
     .where(eq(usersTable.email, email));
   return user.length > 0;
 }
+
+export async function promoteUserToAdmin(userId: number) {
+  const user = await getUserById(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+  user.role = "admin";
+  await updateUserById(userId, user);
+  return {
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+}
