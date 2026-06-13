@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import { taskAppType } from "../../../../../rpc/appTypes";
+import { taskAppType } from "../../../../../shared/appTypes";
 
 const client = hc<taskAppType>(process.env.BACKEND || "http://localhost:8000");
 

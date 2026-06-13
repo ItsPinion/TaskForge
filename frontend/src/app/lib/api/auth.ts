@@ -1,6 +1,6 @@
 "use server";
 import { hc } from "hono/client";
-import type { userAppType } from "@/../../rpc/appTypes";
+import type { userAppType } from "../../../../../shared/appTypes";
 
 const client = hc<userAppType>(process.env.BACKEND || "http://localhost:8000");
 
