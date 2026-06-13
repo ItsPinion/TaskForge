@@ -1,5 +1,5 @@
-import type { userRoute } from "../backend/src/index.ts";
-import type { taskRoute } from "../backend/src/index.ts";
+import type { UserApp } from "../backend/src/rpc.ts";
+import type { TaskApp } from "../backend/src/rpc.ts";
 
-export type userAppType = typeof userRoute;
-export type taskAppType = typeof taskRoute;
+export type userAppType = UserApp;
+export type taskAppType = TaskApp;
