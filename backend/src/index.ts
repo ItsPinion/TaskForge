@@ -58,7 +58,7 @@ export const userRoute = app
       return c.json(users);
     } catch (error) {
       return c.json(
-        { success: false, message: "Failed to access the database" },
+        { success: false, message: "Failed to access the database", error },
         500,
       );
     }
@@ -230,6 +230,7 @@ export const userRoute = app
             {
               success: false,
               message: "Failed to promote user",
+              error,
             },
             500,
           );
@@ -264,7 +265,7 @@ export const taskRoute = app
           console.log(tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json({ message: "Unauthorized" }, 401);
+          return c.json({ message: "Unauthorized", error }, 401);
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
@@ -298,7 +299,10 @@ export const taskRoute = app
           console.log("tasks:", tasks);
           return c.json(tasks);
         } catch (error) {
-          return c.json({ message: "Failed to access the database" }, 500);
+          return c.json(
+            { message: "Failed to access the database", error },
+            500,
+          );
         }
       } catch {
         return c.json({ message: "Unauthorized" }, 401);
