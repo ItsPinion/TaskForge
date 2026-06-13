@@ -31,5 +31,5 @@
     "**/*.mts"
   ],
 
-  "exclude": ["node_modules", "../backend/src"]
+  "exclude": ["node_modules", "../*"]
 }
