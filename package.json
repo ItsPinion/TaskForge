@@ -1,0 +1,8 @@
+{
+  "name": "taskforge",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
